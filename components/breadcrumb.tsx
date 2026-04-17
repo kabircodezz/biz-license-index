@@ -8,10 +8,10 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
       <ol style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', listStyle: 'none', padding: 0, margin: 0 }}>
         {items.map((item, i) => (
           <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {i > 0 && <span style={{ color: '#475569', fontSize: 13 }}>/</span>}
+            {i > 0 && <span style={{ color: '#CBD5E1', fontSize: 13 }}>/</span>}
             {item.href
-              ? <Link href={item.href} style={{ fontSize: 13, color: '#64748B', textDecoration: 'none' }}>{item.label}</Link>
-              : <span style={{ fontSize: 13, color: '#94A3B8' }}>{item.label}</span>
+              ? <Link href={item.href} style={{ fontSize: 13, color: '#185FA5', textDecoration: 'none' }}>{item.label}</Link>
+              : <span style={{ fontSize: 13, color: '#64748B' }}>{item.label}</span>
             }
           </li>
         ))}

@@ -1,12 +1,6 @@
 import Link from 'next/link'
 
-type CTAContext = 
-  | 'license_required_llc'
-  | 'license_required_sole_prop'
-  | 'license_not_required'
-  | 'bond_required'
-  | 'state_hub'
-  | 'default'
+type CTAContext = 'license_required_llc' | 'license_required_sole_prop' | 'license_not_required' | 'bond_required' | 'state_hub' | 'default'
 
 interface AffiliateCTAProps {
   context?: CTAContext
@@ -19,38 +13,43 @@ interface AffiliateCTAProps {
 const partners = {
   zenbusiness: {
     name: 'ZenBusiness',
-    description: 'Form your LLC — $0 + state fees',
-    badge: 'Most Popular',
+    tagline: 'Form your LLC — $0 + state fees',
+    badge: 'Most popular',
     url: '/out/zenbusiness',
-    color: '#3B82F6',
+    bg: '#185FA5',
+    color: '#FFFFFF',
   },
   northwest: {
     name: 'Northwest Registered Agent',
-    description: 'Registered agent + LLC formation from $39/year',
-    badge: 'Best Value',
+    tagline: 'Registered agent + formation from $39/year',
+    badge: null,
     url: '/out/northwest',
-    color: '#8B5CF6',
+    bg: '#FFFFFF',
+    color: '#1E293B',
   },
   legalzoom: {
     name: 'LegalZoom',
-    description: 'Trusted by 4M+ businesses — full legal services',
+    tagline: 'Trusted by 4M+ businesses',
     badge: null,
     url: '/out/legalzoom',
-    color: '#64748B',
+    bg: '#FFFFFF',
+    color: '#1E293B',
   },
   rocketlawyer: {
     name: 'Rocket Lawyer',
-    description: 'Legal documents + attorney access on demand',
+    tagline: 'Legal documents + attorney access',
     badge: null,
     url: '/out/rocketlawyer',
-    color: '#64748B',
+    bg: '#FFFFFF',
+    color: '#1E293B',
   },
   bonsai: {
     name: 'Bonsai',
-    description: 'Contracts, invoicing, and taxes for freelancers',
+    tagline: 'Contracts and invoicing for freelancers',
     badge: null,
     url: '/out/bonsai',
-    color: '#64748B',
+    bg: '#FFFFFF',
+    color: '#1E293B',
   },
 }
 
@@ -74,89 +73,49 @@ function resolveContext(props: AffiliateCTAProps): CTAContext {
 }
 
 export function AffiliateCTA({ context, stateName, businessType, licenseRequired, bondRequired }: AffiliateCTAProps) {
-  const resolvedContext = resolveContext({ context, licenseRequired, bondRequired })
-  const [primary, secondary] = getCTAPair(resolvedContext)
-  const primaryPartner = partners[primary]
-  const secondaryPartner = partners[secondary]
+  const ctx = resolveContext({ context, licenseRequired, bondRequired })
+  const [primary, secondary] = getCTAPair(ctx)
+  const p = partners[primary]
+  const s = partners[secondary]
 
-  const utmSuffix = stateName && businessType
+  const utm = stateName && businessType
     ? `?utm_source=bizlicenseindex&utm_medium=affiliate&utm_campaign=${stateName.toLowerCase().replace(/\s+/g, '-')}-${businessType.toLowerCase().replace(/\s+/g, '-')}`
     : '?utm_source=bizlicenseindex&utm_medium=affiliate'
 
   return (
-    <div style={{
-      border: '1px solid #1E1E1E',
-      borderRadius: 12,
-      padding: 24,
-      backgroundColor: '#111111',
-      marginTop: 8,
-    }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
-        Ready to get started?
+    <div style={{ border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden', backgroundColor: '#FFFFFF', marginTop: 8 }}>
+      <div style={{ padding: '12px 20px', backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+          Ready to get started?
+        </div>
       </div>
-
-      {/* Primary CTA */}
-      <div style={{ marginBottom: 12 }}>
-        <Link
-          href={`${primaryPartner.url}${utmSuffix}`}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '14px 18px',
-            backgroundColor: '#3B82F6',
-            borderRadius: 8,
-            color: 'white',
-            fontWeight: 500,
-            fontSize: 14,
-            transition: 'background-color 0.15s',
-            textDecoration: 'none',
-          }}
-        >
+      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Link href={`${p.url}${utm}`} target="_blank" rel="noopener noreferrer sponsored"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', backgroundColor: '#185FA5', borderRadius: 8, textDecoration: 'none' }}>
           <div>
-            <div style={{ fontWeight: 600, marginBottom: 2 }}>{primaryPartner.name}</div>
-            <div style={{ fontSize: 12, opacity: 0.85 }}>{primaryPartner.description}</div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: '#FFFFFF', marginBottom: 2 }}>{p.name}</div>
+            <div style={{ fontSize: 12, color: '#B3CFEF' }}>{p.tagline}</div>
           </div>
-          {primaryPartner.badge && (
-            <span style={{ fontSize: 11, backgroundColor: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>
-              {primaryPartner.badge}
+          {p.badge && (
+            <span style={{ fontSize: 11, backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFFFFF', padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>
+              {p.badge}
             </span>
           )}
         </Link>
+        <Link href={`${s.url}${utm}`} target="_blank" rel="noopener noreferrer sponsored"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', border: '1px solid #E2E8F0', borderRadius: 8, textDecoration: 'none', backgroundColor: '#FFFFFF' }}>
+          <div>
+            <div style={{ fontWeight: 500, fontSize: 14, color: '#1E293B', marginBottom: 1 }}>{s.name}</div>
+            <div style={{ fontSize: 12, color: '#64748B' }}>{s.tagline}</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+            <path d="M7 17L17 7M17 7H7M17 7v10"/>
+          </svg>
+        </Link>
       </div>
-
-      {/* Secondary CTA */}
-      <Link
-        href={`${secondaryPartner.url}${utmSuffix}`}
-        target="_blank"
-        rel="noopener noreferrer sponsored"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '12px 18px',
-          border: '1px solid #2A2A2A',
-          borderRadius: 8,
-          color: '#F8FAFC',
-          fontSize: 14,
-          transition: 'border-color 0.15s',
-          textDecoration: 'none',
-        }}
-      >
-        <div>
-          <div style={{ fontWeight: 500, marginBottom: 1 }}>{secondaryPartner.name}</div>
-          <div style={{ fontSize: 12, color: '#94A3B8' }}>{secondaryPartner.description}</div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
-          <path d="M7 17L17 7M17 7H7M17 7v10"/>
-        </svg>
-      </Link>
-
-      <p style={{ fontSize: 11, color: '#475569', marginTop: 12, marginBottom: 0 }}>
+      <div style={{ padding: '10px 20px', borderTop: '1px solid #F1F5F9', fontSize: 11, color: '#94A3B8' }}>
         Affiliate disclosure: we may earn a commission if you purchase through these links, at no extra cost to you.
-      </p>
+      </div>
     </div>
   )
 }

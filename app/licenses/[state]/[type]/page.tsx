@@ -6,9 +6,10 @@ import { QuickFacts } from '@/components/quick-facts'
 import { AffiliateCTA } from '@/components/affiliate-cta'
 import Link from 'next/link'
 
-interface PageProps {
-  params: Promise<{ state: string; type: string }>
-}
+interface PageProps { params: Promise<{ state: string; type: string }> }
+
+type RelatedPageState = { slug: string; states: { name: string; slug: string } | null }
+type RelatedPageType  = { slug: string; business_types: { name: string; slug: string } | null }
 
 async function getLicensePage(stateSlug: string, typeSlug: string) {
   const { data } = await supabase
@@ -20,13 +21,10 @@ async function getLicensePage(stateSlug: string, typeSlug: string) {
   return data
 }
 
-type RelatedPageState = { slug: string; states: { name: string; slug: string } | null }
-type RelatedPageType = { slug: string; business_types: { name: string; slug: string } | null }
-
 async function getRelatedPages(stateId: string, typeId: string, stateSlug: string, typeSlug: string) {
   const [sameType, sameState] = await Promise.all([
     supabase.from('license_pages').select('slug, states(name, slug)').eq('business_type_id', typeId).eq('status', 'published').neq('slug', `${stateSlug}-${typeSlug}`).limit(5),
-    supabase.from('license_pages').select('slug, business_types(name, slug)').eq('state_id', stateId).eq('status', 'published').neq('slug', `${stateSlug}-${typeSlug}`).limit(3),
+    supabase.from('license_pages').select('slug, business_types(name, slug)').eq('state_id', stateId).eq('status', 'published').neq('slug', `${stateSlug}-${typeSlug}`).limit(4),
   ])
   return {
     sameType: (sameType.data || []) as unknown as RelatedPageState[],
@@ -55,21 +53,20 @@ export default async function LicenseDetailPage({ params }: PageProps) {
 
   const stateName = page.states?.name || ''
   const typeName = page.business_types?.name || ''
-  const verifiedDate = page.data_verified_at ? new Date(page.data_verified_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null
+  const verifiedDate = page.data_verified_at
+    ? new Date(page.data_verified_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : null
 
   const faqSchema = page.faq_json ? {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
+    '@context': 'https://schema.org', '@type': 'FAQPage',
     mainEntity: page.faq_json.map((faq: { q: string; a: string }) => ({
-      '@type': 'Question',
-      name: faq.q,
+      '@type': 'Question', name: faq.q,
       acceptedAnswer: { '@type': 'Answer', text: faq.a },
     })),
   } : null
 
   const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: process.env.NEXT_PUBLIC_SITE_URL },
       { '@type': 'ListItem', position: 2, name: 'Licenses', item: `${process.env.NEXT_PUBLIC_SITE_URL}/licenses` },
@@ -84,43 +81,43 @@ export default async function LicenseDetailPage({ params }: PageProps) {
 
   return (
     <>
-      {faqSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      )}
+      {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 80px' }}>
-        <Breadcrumb items={[
-          { label: 'Licenses', href: '/licenses' },
-          { label: stateName, href: `/licenses/${stateSlug}` },
-          { label: typeName },
-        ]} />
-
-        {/* Hero */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, border: '1px solid #1E1E1E', color: '#94A3B8' }}>
+      {/* Page header */}
+      <div style={{ backgroundColor: '#1B2E4B', padding: '40px 24px 36px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <Breadcrumb items={[
+            { label: 'Home', href: '/' },
+            { label: stateName, href: `/licenses/${stateSlug}` },
+            { label: typeName },
+          ]} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, border: '1px solid rgba(96,165,250,0.3)', color: '#93B4D4' }}>
               {page.business_types?.category}
             </span>
             {page.license_required !== null && (
               <span style={{
                 fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
-                backgroundColor: page.license_required ? '#052e16' : '#1a1a1a',
-                border: `1px solid ${page.license_required ? '#166534' : '#2A2A2A'}`,
-                color: page.license_required ? '#22C55E' : '#64748B',
+                backgroundColor: page.license_required ? 'rgba(22,163,74,0.15)' : 'rgba(255,255,255,0.08)',
+                border: `1px solid ${page.license_required ? 'rgba(22,163,74,0.4)' : 'rgba(255,255,255,0.15)'}`,
+                color: page.license_required ? '#86EFAC' : '#93B4D4',
               }}>
                 {page.license_required ? 'License Required' : 'No State License Required'}
               </span>
             )}
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 700, color: '#F8FAFC', letterSpacing: '-0.02em', lineHeight: 1.2, margin: '0 0 12px' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.2, margin: '0 0 12px' }}>
             {typeName} License Requirements in {stateName}
           </h1>
-          <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#64748B', flexWrap: 'wrap' }}>
-            {page.licensing_body && <span>Issued by: <span style={{ color: '#94A3B8' }}>{page.licensing_body}</span></span>}
-            {verifiedDate && <span>Verified: <span style={{ color: '#94A3B8' }}>{verifiedDate}</span></span>}
+          <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#93B4D4', flexWrap: 'wrap' }}>
+            {page.licensing_body && <span>Issued by: <span style={{ color: '#CBD5E1' }}>{page.licensing_body}</span></span>}
+            {verifiedDate && <span>Verified: <span style={{ color: '#CBD5E1' }}>{verifiedDate}</span></span>}
           </div>
         </div>
+      </div>
+
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 80px' }}>
 
         {/* Quick facts */}
         <QuickFacts facts={[
@@ -135,12 +132,12 @@ export default async function LicenseDetailPage({ params }: PageProps) {
         {/* Requirements */}
         {page.requirements_list && page.requirements_list.length > 0 && (
           <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#F8FAFC', marginBottom: 16 }}>Requirements</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1E293B', marginBottom: 16 }}>Requirements</h2>
             <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {(page.requirements_list as string[]).map((req, i) => (
-                <li key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                  <span style={{ flexShrink: 0, width: 24, height: 24, backgroundColor: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#3B82F6', marginTop: 1 }}>{i + 1}</span>
-                  <span style={{ fontSize: 15, color: '#CBD5E1', lineHeight: 1.6 }}>{req}</span>
+                <li key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '12px 16px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8 }}>
+                  <span style={{ flexShrink: 0, width: 24, height: 24, backgroundColor: '#E6F1FB', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#185FA5', marginTop: 1 }}>{i + 1}</span>
+                  <span style={{ fontSize: 14, color: '#334155', lineHeight: 1.6 }}>{req}</span>
                 </li>
               ))}
             </ol>
@@ -150,13 +147,13 @@ export default async function LicenseDetailPage({ params }: PageProps) {
         {/* How to apply */}
         {page.requirements_summary && (
           <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#F8FAFC', marginBottom: 16 }}>How to Apply</h2>
-            <div style={{ fontSize: 15, color: '#CBD5E1', lineHeight: 1.7, backgroundColor: '#111111', border: '1px solid #1E1E1E', borderRadius: 10, padding: 24 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1E293B', marginBottom: 16 }}>How to Apply</h2>
+            <div style={{ fontSize: 15, color: '#334155', lineHeight: 1.7, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 10, padding: 24 }}>
               {page.requirements_summary}
             </div>
             {page.licensing_body_url && (
               <a href={page.licensing_body_url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16, padding: '10px 18px', backgroundColor: '#111111', border: '1px solid #2A2A2A', borderRadius: 8, fontSize: 14, color: '#94A3B8', textDecoration: 'none' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 14, padding: '10px 18px', backgroundColor: '#185FA5', color: '#FFFFFF', borderRadius: 8, fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>
                 Apply at {page.licensing_body || 'Official Portal'}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
               </a>
@@ -167,24 +164,24 @@ export default async function LicenseDetailPage({ params }: PageProps) {
         {/* Costs */}
         {(page.application_fee || page.renewal_fee || page.bond_amount) && (
           <section style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#F8FAFC', marginBottom: 16 }}>Costs</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1E293B', marginBottom: 16 }}>Costs</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
               {page.application_fee && (
-                <div style={{ backgroundColor: '#111111', border: '1px solid #1E1E1E', borderRadius: 8, padding: '16px 20px' }}>
-                  <div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Application Fee</div>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#F8FAFC' }}>{page.application_fee}</div>
+                <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, padding: '16px 20px' }}>
+                  <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6, fontWeight: 500 }}>Application Fee</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: '#1E293B' }}>{page.application_fee}</div>
                 </div>
               )}
               {page.renewal_fee && (
-                <div style={{ backgroundColor: '#111111', border: '1px solid #1E1E1E', borderRadius: 8, padding: '16px 20px' }}>
-                  <div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Renewal Fee</div>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#F8FAFC' }}>{page.renewal_fee}</div>
+                <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, padding: '16px 20px' }}>
+                  <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6, fontWeight: 500 }}>Renewal Fee</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: '#1E293B' }}>{page.renewal_fee}</div>
                 </div>
               )}
               {page.bond_amount && (
-                <div style={{ backgroundColor: '#111111', border: '1px solid #1E1E1E', borderRadius: 8, padding: '16px 20px' }}>
-                  <div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Surety Bond</div>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#F8FAFC' }}>{page.bond_amount}</div>
+                <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, padding: '16px 20px' }}>
+                  <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6, fontWeight: 500 }}>Surety Bond</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: '#1E293B' }}>{page.bond_amount}</div>
                 </div>
               )}
             </div>
@@ -197,14 +194,14 @@ export default async function LicenseDetailPage({ params }: PageProps) {
         {/* FAQ */}
         {page.faq_json && page.faq_json.length > 0 && (
           <section style={{ marginTop: 48, marginBottom: 40 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#F8FAFC', marginBottom: 20 }}>Frequently Asked Questions</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1E293B', marginBottom: 16 }}>Frequently Asked Questions</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {(page.faq_json as { q: string; a: string }[]).map((faq, i) => (
-                <details key={i} style={{ border: '1px solid #1E1E1E', borderRadius: 8, overflow: 'hidden' }}>
-                  <summary style={{ padding: '16px 20px', fontSize: 15, fontWeight: 500, color: '#F8FAFC', cursor: 'pointer', listStyle: 'none', backgroundColor: '#111111' }}>
+                <details key={i} style={{ border: '1px solid #E2E8F0', borderRadius: 8, overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+                  <summary style={{ padding: '16px 20px', fontSize: 15, fontWeight: 500, color: '#1E293B', cursor: 'pointer', listStyle: 'none' }}>
                     {faq.q}
                   </summary>
-                  <div style={{ padding: '16px 20px', fontSize: 14, color: '#94A3B8', lineHeight: 1.7, borderTop: '1px solid #1E1E1E', backgroundColor: '#0D0D0D' }}>
+                  <div style={{ padding: '14px 20px', fontSize: 14, color: '#64748B', lineHeight: 1.7, borderTop: '1px solid #F1F5F9' }}>
                     {faq.a}
                   </div>
                 </details>
@@ -213,19 +210,20 @@ export default async function LicenseDetailPage({ params }: PageProps) {
           </section>
         )}
 
-        {/* Related */}
+        {/* Related pages */}
         {(sameType.length > 0 || sameState.length > 0) && (
-          <section style={{ marginTop: 48 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#F8FAFC', marginBottom: 20 }}>Related Pages</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <section style={{ marginTop: 48, backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: 24 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: '#1E293B', marginBottom: 20 }}>Related pages</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
               {sameType.length > 0 && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>{typeName} in other states</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {sameType.map((p) => (
                       <Link key={p.slug} href={`/licenses/${p.states?.slug || ''}/${typeSlug}`}
-                        style={{ fontSize: 13, color: '#64748B', textDecoration: 'none', padding: '6px 0', borderBottom: '1px solid #1A1A1A' }}>
-                        {p.states?.name || p.slug} →
+                        style={{ fontSize: 13, color: '#185FA5', textDecoration: 'none', padding: '6px 0', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{p.states?.name || p.slug}</span>
+                        <span style={{ color: '#CBD5E1' }}>→</span>
                       </Link>
                     ))}
                   </div>
@@ -234,11 +232,12 @@ export default async function LicenseDetailPage({ params }: PageProps) {
               {sameState.length > 0 && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Other licenses in {stateName}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {sameState.map((p) => (
                       <Link key={p.slug} href={`/licenses/${stateSlug}/${p.business_types?.slug || ''}`}
-                        style={{ fontSize: 13, color: '#64748B', textDecoration: 'none', padding: '6px 0', borderBottom: '1px solid #1A1A1A' }}>
-                        {p.business_types?.name || p.slug} →
+                        style={{ fontSize: 13, color: '#185FA5', textDecoration: 'none', padding: '6px 0', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{p.business_types?.name || p.slug}</span>
+                        <span style={{ color: '#CBD5E1' }}>→</span>
                       </Link>
                     ))}
                   </div>
@@ -250,14 +249,13 @@ export default async function LicenseDetailPage({ params }: PageProps) {
 
         {/* Official source */}
         {page.official_source_url && (
-          <div style={{ marginTop: 48, padding: '16px 20px', backgroundColor: '#0D0D0D', border: '1px solid #1E1E1E', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 12, color: '#475569', marginBottom: 2 }}>Official source</div>
-              <div style={{ fontSize: 13, color: '#64748B' }}>Data sourced from official state government portal{verifiedDate ? `. Last verified ${verifiedDate}.` : '.'}</div>
+          <div style={{ marginTop: 32, padding: '14px 18px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ fontSize: 12, color: '#94A3B8' }}>
+              Data sourced from official state government portal{verifiedDate ? `. Last verified ${verifiedDate}.` : '.'}
             </div>
             <a href={page.official_source_url} target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 13, color: '#3B82F6', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              View source →
+              style={{ fontSize: 13, color: '#185FA5', textDecoration: 'none', fontWeight: 500 }}>
+              View official source →
             </a>
           </div>
         )}

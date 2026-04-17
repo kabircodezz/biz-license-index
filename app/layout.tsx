@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ backgroundColor: '#0A0A0A', color: '#F8FAFC', fontFamily: 'system-ui, sans-serif', margin: 0 }}>
+      <body style={{ backgroundColor: '#F8FAFC', color: '#1E293B', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif', margin: 0 }}>
         <Nav />
         <main style={{ minHeight: '100vh' }}>{children}</main>
         <Footer />
