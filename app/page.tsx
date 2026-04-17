@@ -39,12 +39,28 @@ const featuredTypes = [
   {name:'Insurance Agent',slug:'insurance-agent'},
 ]
 
+// Group states alphabetically
+function groupByLetter(list: typeof states) {
+  const groups: Record<string, typeof states> = {}
+  list.forEach(s => {
+    const letter = s.name[0]
+    if (!groups[letter]) groups[letter] = []
+    groups[letter].push(s)
+  })
+  return groups
+}
+
+const verifiedDate = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+
 export default function HomePage() {
   const [search, setSearch] = useState('')
+  const [hoveredType, setHoveredType] = useState<string | null>(null)
   const filtered = states.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.abbr.toLowerCase().includes(search.toLowerCase())
   )
+  const grouped = search ? null : groupByLetter(states)
+  const letters = grouped ? Object.keys(grouped).sort() : null
 
   return (
     <div>
@@ -60,7 +76,7 @@ export default function HomePage() {
           <p style={{ fontSize: 17, color: '#93B4D4', margin: '0 0 36px', lineHeight: 1.6 }}>
             Find the exact licenses, permits, fees, and steps to legally operate your business in any US state. Data sourced from official state government portals.
           </p>
-          <div style={{ maxWidth: 480, margin: '0 auto', position: 'relative' as const }}>
+          <div style={{ maxWidth: 480, margin: '0 auto 16px', position: 'relative' as const }}>
             <svg style={{ position: 'absolute' as const, left: 14, top: '50%', transform: 'translateY(-50%)', color: '#93B4D4' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             </svg>
@@ -72,36 +88,72 @@ export default function HomePage() {
               style={{ width: '100%', padding: '13px 16px 13px 44px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, color: '#1E293B', fontSize: 15, outline: 'none', boxSizing: 'border-box' as const }}
             />
           </div>
+          {/* Last verified timestamp */}
+          <div style={{ fontSize: 12, color: 'rgba(147,180,212,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Database last verified: {verifiedDate}
+          </div>
         </div>
       </div>
 
       {/* Trust bar */}
       <div style={{ backgroundColor: '#F1F5F9', borderBottom: '1px solid #E2E8F0', padding: '14px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 32, justifyContent: 'center', flexWrap: 'wrap' as const }}>
-          {[
-            'Data from official state .gov portals',
-            'Regularly verified and updated',
-            'Free — no account required',
-          ].map((t, i) => (
+          {['Data from official state .gov portals','Regularly verified and updated','Free — no account required'].map((t, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#64748B' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
               {t}
             </div>
           ))}
         </div>
       </div>
 
+      {/* How it works */}
+      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '32px 24px' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
+            {[
+              { step: '1', label: 'Search your state', desc: 'Find your state from the grid or use the search bar above.' },
+              { step: '2', label: 'Select your business type', desc: 'Choose from 50 business types across 8 categories.' },
+              { step: '3', label: 'Get the requirements', desc: 'See fees, steps, and links to official licensing portals.' },
+            ].map((item, i) => (
+              <div key={i} style={{ padding: '16px 24px', borderRight: i < 2 ? '1px solid #E2E8F0' : 'none', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: '#E6F1FB', color: '#185FA5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0, marginTop: 2 }}>
+                  {item.step}
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1E293B', marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px 80px' }}>
 
-        {/* Popular types */}
+        {/* Popular types — with hover state */}
         <div style={{ marginBottom: 48 }}>
           <h2 style={{ fontSize: 18, fontWeight: 600, color: '#1E293B', marginBottom: 16 }}>Popular business types</h2>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 10 }}>
             {featuredTypes.map(t => (
               <Link key={t.slug} href={`/licenses/type/${t.slug}`}
-                style={{ padding: '9px 18px', border: '1px solid #E2E8F0', borderRadius: 8, backgroundColor: '#FFFFFF', fontSize: 14, color: '#1E293B', textDecoration: 'none', fontWeight: 500 }}>
+                onMouseEnter={() => setHoveredType(t.slug)}
+                onMouseLeave={() => setHoveredType(null)}
+                style={{
+                  padding: '9px 18px',
+                  border: `1px solid ${hoveredType === t.slug ? '#185FA5' : '#E2E8F0'}`,
+                  borderRadius: 8,
+                  backgroundColor: hoveredType === t.slug ? '#E6F1FB' : '#FFFFFF',
+                  fontSize: 14,
+                  color: hoveredType === t.slug ? '#185FA5' : '#1E293B',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  transition: 'all 0.15s',
+                }}>
                 {t.name}
               </Link>
             ))}
@@ -112,24 +164,50 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* State grid */}
+        {/* State grid — alphabetical when not searching */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, color: '#1E293B', margin: 0 }}>Browse by state</h2>
             <span style={{ fontSize: 13, color: '#94A3B8' }}>{filtered.length} states</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 8 }}>
-            {filtered.map(state => (
-              <Link key={state.slug} href={`/licenses/${state.slug}`}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', border: '1px solid #E2E8F0', borderRadius: 8, backgroundColor: '#FFFFFF', textDecoration: 'none' }}>
-                <span style={{ fontSize: 14, color: '#1E293B', fontWeight: 500 }}>{state.name}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', backgroundColor: '#F1F5F9', padding: '2px 7px', borderRadius: 4 }}>{state.abbr}</span>
-              </Link>
-            ))}
-          </div>
-          {filtered.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8' }}>
-              No states found matching &quot;{search}&quot;
+
+          {/* Search results — flat grid */}
+          {search && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 8 }}>
+              {filtered.map(state => (
+                <Link key={state.slug} href={`/licenses/${state.slug}`}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', border: '1px solid #E2E8F0', borderRadius: 8, backgroundColor: '#FFFFFF', textDecoration: 'none' }}>
+                  <span style={{ fontSize: 14, color: '#1E293B', fontWeight: 500 }}>{state.name}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', backgroundColor: '#F1F5F9', padding: '2px 7px', borderRadius: 4 }}>{state.abbr}</span>
+                </Link>
+              ))}
+              {filtered.length === 0 && (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '48px 0', color: '#94A3B8' }}>
+                  No states found matching &quot;{search}&quot;
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Alphabetical groups — no search active */}
+          {!search && letters && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {letters.map(letter => (
+                <div key={letter}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.1em', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #F1F5F9' }}>
+                    {letter}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 8 }}>
+                    {grouped![letter].map(state => (
+                      <Link key={state.slug} href={`/licenses/${state.slug}`}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', border: '1px solid #E2E8F0', borderRadius: 8, backgroundColor: '#FFFFFF', textDecoration: 'none' }}>
+                        <span style={{ fontSize: 14, color: '#1E293B', fontWeight: 500 }}>{state.name}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', backgroundColor: '#F1F5F9', padding: '2px 7px', borderRadius: 4 }}>{state.abbr}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
